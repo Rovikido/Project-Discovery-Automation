@@ -1,0 +1,6 @@
+__pycache__/
+test_stuff/
+*.jpg
+todo.txt
+tmp/
+venv/
