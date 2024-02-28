@@ -6,21 +6,21 @@ from time import sleep
 from random import randint, choice
 from math import ceil
 import platform
-from app.utility import random_unexpected_normal
+from .utility import random_unexpected_normal
 
 #WORKING DIRECTORY
 CWD = os.path.dirname(os.path.realpath(__file__))
 
 pyautogui.MINIMUM_DURATION = 0.01
 
-def real_click(can_not_click=False, decrease_time_by=4):
+def real_click(can_not_click=False):
     '''This function clicks the mouse with realistic errors:
         occasional accidental right click
         occasional double click
         occasional no click
     '''
     if randint(1, 19) != 1:
-        sleep(random_unexpected_normal(0.206, 1.204, additional_range=(1.5, 5), additional_chance=0.003)/decrease_time_by)
+        sleep(random_unexpected_normal(0.206, 1.204, additional_range=(1.5, 5), additional_chance=0.003)/2)
         pyautogui.click()
     else:
         tmp_rand = randint(1, 5)
@@ -31,10 +31,8 @@ def real_click(can_not_click=False, decrease_time_by=4):
             pyautogui.click()
         elif tmp_rand == 4:
             pyautogui.click(button = 'right')
-            sleep(random_unexpected_normal(0.206, 0.855, additional_range=(1.5, 5), additional_chance=0.003)/decrease_time_by)
-            pyautogui.click()
         elif not can_not_click:
-            sleep(random_unexpected_normal(0.206, 1.204, additional_range=(1.5, 5), additional_chance=0.003)/decrease_time_by)
+            sleep(random_unexpected_normal(0.206, 1.204, additional_range=(1.5, 5), additional_chance=0.003)/2)
             pyautogui.click()
 
 
@@ -73,7 +71,7 @@ def move_to_img(img_name, deviation, speed):
         return False
 
 
-def move_to_area(x, y, width, height, deviation, speed, delete_every_n=None):
+def move_to_area(x, y, width, height, deviation, speed):
     '''
     Arguments same as pyautogui.locateAllOnScreen format: x and y are top left corner
     
@@ -86,7 +84,7 @@ def move_to_area(x, y, width, height, deviation, speed, delete_every_n=None):
     x_coord = x + randint(0, width)
     y_coord = y + randint(0, height)
     
-    move(mouse_bez(init_pos, (x_coord, y_coord), deviation, speed, delete_every_n=None))
+    move(mouse_bez(init_pos, (x_coord, y_coord), deviation, speed))
 
 
 def pascal_row(n):

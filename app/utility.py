@@ -1,5 +1,27 @@
 from random import random, randrange, uniform
 import numpy as np
+from shapely.geometry import Polygon, Point
+
+
+def polygon_contains_polygon(polygon1, polygon2):
+    """
+    Check if polygon1 contains any points of polygon2 inside it.
+    
+    Args:
+    polygon1 (list of tuples): List of (x, y) coordinates defining the vertices of polygon1.
+    polygon2 (list of tuples): List of (x, y) coordinates defining the vertices of polygon2.
+    
+    Returns:
+    bool: True if polygon1 contains any points of polygon2, False otherwise.
+    """
+    poly1 = Polygon(polygon1)
+    poly2 = Polygon(polygon2)
+    
+    for point in poly2.exterior.coords:
+        if Point(point).within(poly1):
+            return True
+    
+    return False
 
 
 def random_normal(start, end=0, shift_mu=0, scale_sigma=1):

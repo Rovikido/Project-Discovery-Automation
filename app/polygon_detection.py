@@ -3,8 +3,8 @@ from time import sleep
 import matplotlib.pyplot as plt
 import numpy as np
 
-import polygon_expander as pge
-from utility import get_centroid_of_polygon
+import app.polygon_expander as pge
+from app.utility import get_centroid_of_polygon, polygon_contains_polygon
 
 def draw_contours(image, min_area=150):
     """
@@ -108,7 +108,7 @@ def check_for_countor_number(image, binary_image, blob_mask, itterations=3):
     contours, _ = draw_contours(cv2.bitwise_and(image, image, mask=updated_blob_mask))
     
     for i in range(itterations):
-        print(len(contours))
+        # print(len(contours))
         if len(contours) != 1:
             return updated_blob_mask, image
         new_blob_mask = erode_mask_least_bright(updated_blob_mask, binary_image, increase_by=5, remove_at_least=40+i*20)
@@ -133,16 +133,17 @@ def check_for_countor_number(image, binary_image, blob_mask, itterations=3):
             point[0] = [x, y]
 
         new_image = image.copy()
-        print(contour)
+        # print(contour)
+        old_contour = contour.copy()
         cv2.drawContours(new_blob_mask, [opposite_contour], 0, 255, thickness=cv2.FILLED)
         cv2.drawContours(new_image, [opposite_contour], 0, 255, thickness=cv2.FILLED)
 
         new_contours, _ = draw_contours(cv2.bitwise_and(new_image, new_image, mask=new_blob_mask))
-        print(len(new_contours))
+        # print(len(new_contours))
         if True: # len(new_contours) == 1
             contour = [p[0] for p in contour]
             center = get_centroid_of_polygon(contour, round_=True)
-            print(center)
+            # print(center)
             add_x = 0
             add_y = 0
             if abs(image.shape[0]/2 - center[0]) < 10:
@@ -160,6 +161,21 @@ def check_for_countor_number(image, binary_image, blob_mask, itterations=3):
                                 [[center[0] - add_x, center[1]+9 - add_y]]
                                 ])
 
+
+            new_image = image.copy()
+            new_blob_mask = updated_blob_mask.copy()
+            # print(contour)
+            cv2.drawContours(new_blob_mask, [opposite_contour], 0, 255, thickness=cv2.FILLED)
+            cv2.drawContours(new_image, [opposite_contour], 0, 255, thickness=cv2.FILLED)
+
+            cv2.drawContours(new_blob_mask, [contour], 0, 255, thickness=cv2.FILLED)
+            cv2.drawContours(new_image, [contour], 0, 255, thickness=cv2.FILLED)
+
+            new_contours, _ = draw_contours(cv2.bitwise_and(new_image, new_image, mask=new_blob_mask))
+            if len(new_contours) == 0:
+                cv2.drawContours(updated_blob_mask, [old_contour], 0, 255, thickness=cv2.FILLED)
+                cv2.drawContours(image, [old_contour], 0, 255, thickness=cv2.FILLED)
+                return updated_blob_mask, image
 
         updated_blob_mask[:] = 0
         image[:, :] = 0
@@ -209,40 +225,81 @@ def upscale_polygons(polygons, value):
     return [[[(cord * value) for cord in point] for point in polygon] for polygon in polygons]
 
 
-def get_polygons_from_image(image, downscale_by=2, debug=False): 
-    image = replace_color_with_black(image, (40, 40, 40))
-    image = downscale_image_by_n(image, downscale_by)
-    image = remove_blob_pixels(image)
-
-    if debug:
-        cv2.imshow('Result', image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    contours, image_with_contours = draw_contours(image)
-
-    if debug:
-        cv2.imshow("Image with Contours", image_with_contours)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+def find_brightest_point(image):
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(gray_image)
+    return max_loc
 
 
-    contours = [[c[0] for c in cont] for cont in contours]
+def generate_random_polygons(image):
+    height, width = image.shape[:2]
+    center = find_brightest_point(image)
+    add_x = 0
+    add_y = 0
+    if abs(image.shape[0]/2 - center[0]) < 10:
+        add_x = -40 if (image.shape[0]/2 - center[0]) > 0 else 40
+    if abs(image.shape[1]/2 - center[1]) < 10:
+        add_y = -40 if (image.shape[1]/2 - center[1]) > 0 else 40
+    res = [[[width - center[0]+9 + add_x, height - center[1] + add_y],
+            [width - center[0] + add_x, height - center[1]-9 + add_y],
+            [width - center[0]-9 + add_x, height - center[1] + add_y],
+            [width - center[0] + add_x, height - center[1]+9 + add_y]],
+            [[center[0] + 9 - add_x, center[1] - add_y],
+            [center[0] - add_x, center[1] - 9 - add_y],
+            [center[0] - 9 - add_x, center[1] - add_y],
+            [center[0] - add_x, center[1] + 9 - add_y]]]
+    return res
 
-    polygons = pge.expand_polygons(contours, image.shape[:2])
 
-    contours = [np.array(polygon).reshape((-1, 1, 2)) for polygon in polygons]
+def get_polygons_from_image(image, downscale_by=2, debug=False):
+    orginial_image=image.copy()
+    try:
+        image = replace_color_with_black(image, (40, 40, 40))
+        image = downscale_image_by_n(image, downscale_by)
+        image = remove_blob_pixels(image)
 
-    expanded_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    cv2.drawContours(expanded_image, contours, -1, (0, 255, 0), 2)
+        if debug:
+            cv2.imshow('Result', image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
-    polygons = upscale_polygons(polygons, downscale_by)
+        contours, image_with_contours = draw_contours(image)
 
-    if debug:
-        cv2.imshow("Polygons Contours", expanded_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if debug:
+            cv2.imshow("Image with Contours", image_with_contours)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
-    polygons = [[tuple(point) for point in polygon] for polygon in polygons]
-    print(polygons)
+
+        contours = [[c[0] for c in cont] for cont in contours]
+
+        polygons = pge.expand_polygons(contours, image.shape[:2])       
+        
+        polygons = upscale_polygons(polygons, downscale_by)
+
+        if debug:
+            contours = [np.array(polygon).reshape((-1, 1, 2)) for polygon in polygons]
+            expanded_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            cv2.drawContours(expanded_image, contours, -1, (0, 255, 0), 2)
+            cv2.imshow("Polygons Contours", expanded_image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        polygons = [[tuple(point) for point in polygon] for polygon in polygons]
+
+        for polygon1 in polygons:
+            for polygon2 in polygons:
+                if not polygon1 == polygon2:
+                    if polygon_contains_polygon(polygon1=polygon1, polygon2=polygon2):
+                        raise ValueError('Polygon contains other polygons points!')
+    except Exception as e:
+        print(e)
+        polygons = generate_random_polygons(orginial_image)
+        print(polygons)
+        polygons = pge.expand_polygons(contours, image.shape[:2])       
+        polygons = upscale_polygons(polygons, downscale_by)
+        polygons = [[tuple(point) for point in polygon] for polygon in polygons]
+        return polygons
+
+    # print(polygons)
     return polygons

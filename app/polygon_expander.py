@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
-from utility import dilate_poly_random
+from app.utility import dilate_poly_random
 
-def get_polygon_from_matrix(matrix, epsilon=8, reduce_by=20):
+def get_polygon_from_matrix(matrix, epsilon=8, reduce_by=25):
     edge_points_list = []
     for num in np.unique(matrix):
         mask = np.uint8(matrix == num) * 255
@@ -14,7 +14,7 @@ def get_polygon_from_matrix(matrix, epsilon=8, reduce_by=20):
             
             vertices = [tuple(point[0]) for point in approx]
             
-            vertices = dilate_poly_random(vertices, distance=-reduce_by, random_distance=True, random_range=15)
+            vertices = dilate_poly_random(vertices, distance=-reduce_by, random_distance=True, random_range=20)
 
             edge_points_list.append(vertices)
     
