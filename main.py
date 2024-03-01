@@ -15,7 +15,7 @@ if __name__ == "__main__":
     h=416
 
     sleep(5)
-    i = 180
+    i = 0
     while i < 195:
         try:
             image = get_screenshot_at(x, y, w, h)
@@ -27,6 +27,8 @@ if __name__ == "__main__":
             print(f'Itteration {i} is finished')
             i+=1
         except Exception as e:
+            print(f'Error occured in Itteration {i}!')
             print(e)
+            
     # print(polygons.shape)
     # get_clusters(data_from_image)
