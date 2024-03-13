@@ -296,10 +296,18 @@ def get_polygons_from_image(image, downscale_by=2, debug=False):
         print(e)
         polygons = generate_random_polygons(orginial_image)
         print(polygons)
-        polygons = pge.expand_polygons(contours, image.shape[:2])       
+        polygons = pge.expand_polygons(polygons, image.shape[:2])       
         polygons = upscale_polygons(polygons, downscale_by)
         polygons = [[tuple(point) for point in polygon] for polygon in polygons]
         return polygons
 
     # print(polygons)
     return polygons
+
+
+def gen_rand_polygons_interface(image, downscale_by=2, debug=False):
+    orginial_image=image.copy()
+    polygons = generate_random_polygons(orginial_image)
+    polygons = pge.expand_polygons(polygons, image.shape[:2])       
+    polygons = upscale_polygons(polygons, downscale_by)
+    polygons = [[tuple(point) for point in polygon] for polygon in polygons]

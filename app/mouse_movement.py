@@ -32,11 +32,13 @@ def click_next(x=1866, y=740, iw=304, ih=24):
                      deviation=round(random_unexpected_normal(10, 20, additional_range=(2, 3), additional_chance=0.005)), 
                      speed=round(random_unexpected_normal(1, 3, additional_range=(2, 7))), 
                      delete_every_n=6)
-    sleep(random_unexpected_normal(0.05, 0.3))
+    sleep(random_unexpected_normal(0.2, 0.3))
     bzm.real_click()
-    sleep(random_unexpected_normal(0.05, 0.3))
+    sleep(random_unexpected_normal(0.2, 0.3))
     bzm.real_click()
-    sleep(random_unexpected_normal(0.05, 0.3))
+    sleep(random_unexpected_normal(0.2, 0.3))
     bzm.real_click()
-    sleep(random_unexpected_normal(0.8, 1.1))
+    sleep(random_unexpected_normal(1.7, 2.3))
+    bzm.real_click()
+    sleep(random_unexpected_normal(0.1, 0.3))
 
