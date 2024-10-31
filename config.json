@@ -1,0 +1,17 @@
+{
+    "SCREENSHOT_COORDS": {
+        "x": 1080,
+        "y": 311,
+        "w": 448,
+        "h": 416
+    },
+    "CLICK_OFFSET": {
+        "x_offset": 790,
+        "y_offset": 434
+    },
+    "CLICK_COORDS": {
+        "width": 200,
+        "height": 10
+    },
+    "MAX_ITERATIONS": 200
+}

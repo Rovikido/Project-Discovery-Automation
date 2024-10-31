@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import app.polygon_expander as pge
-from app.utility import get_centroid_of_polygon, polygon_contains_polygon
+from app.utility.utility import get_centroid_of_polygon, polygon_contains_polygon
+
 
 def draw_contours(image, min_area=150):
     """
@@ -34,32 +35,32 @@ def draw_contours(image, min_area=150):
 
 
 def remove_blob_pixels(image, blockSize=821, min_blob_size=600, min_blob_area=400):
-    # Convert to grayscale
+    """
+    Removes blobs from the image based on size criteria.
+
+    Parameters:
+        image (numpy.ndarray): Input image.
+        blockSize (int): Block size for GaussianBlur.
+        min_blob_size (int): Minimum size of blobs to be considered.
+        min_blob_area (int): Minimum area of blobs to be considered.
+
+    Returns:
+        numpy.ndarray: Image with blobs removed.
+    """
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur to reduce noise
     blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
-
-    # Otsu's thresholding
-    _, binary_image = cv2.threshold(blurred_image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    
+    _, binary_image = cv2.threshold(blurred_image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU) # Otsu's thresholding
     binary_image = 255 - binary_image
-
     i_height, i_width = image.shape
 
-    # Connected-component labeling
     blob_label = 1
-    # fit_labels=[]
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(binary_image, connectivity=8)
     for i in range(1, num_labels):  # Skip background label (0)
-        # Extract properties
         area = stats[i, cv2.CC_STAT_AREA]
         centroid = centroids[i]
         x, y, w, h = stats[i, cv2.CC_STAT_LEFT], stats[i, cv2.CC_STAT_TOP], stats[i, cv2.CC_STAT_WIDTH], stats[i, cv2.CC_STAT_HEIGHT]
 
-        # Filter out small blobs
         if area >= min_blob_area:
-            # # Display or process properties as needed
             print(f"Blob {i}: Area={area}, Centroid={centroid}, Bounding Box={(x, y, w, h)}")
             if  w == i_width and h == i_height:
                 blob_label = i
@@ -67,22 +68,16 @@ def remove_blob_pixels(image, blockSize=821, min_blob_size=600, min_blob_area=40
     # Create mask for the specified blob label
     blob_mask = np.zeros_like(binary_image)
     blob_mask[labels == blob_label] = 255
-
     blob_mask = cv2.bitwise_not(blob_mask)
-    
     # blob_mask = erode_mask_least_bright(blob_mask, binary_image, increase_by=5, remove_at_least=40)
-
     blob_mask, image = check_for_countor_number(image, binary_image, blob_mask, itterations=10)
 
     result_image = cv2.bitwise_and(image, image, mask=blob_mask)
-
     return result_image
 
 
 def erode_mask_least_bright(blob_mask, image, increase_by=5, remove_at_least=40):
-
     contours, _ = cv2.findContours(blob_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
     kernel = np.ones((3, 3), np.uint8)
     eroded_mask = cv2.erode(blob_mask, kernel, iterations=increase_by)
     
@@ -301,7 +296,6 @@ def get_polygons_from_image(image, downscale_by=2, debug=False):
         polygons = [[tuple(point) for point in polygon] for polygon in polygons]
         return polygons
 
-    # print(polygons)
     return polygons
 
 
@@ -311,3 +305,5 @@ def gen_rand_polygons_interface(image, downscale_by=2, debug=False):
     polygons = pge.expand_polygons(polygons, image.shape[:2])       
     polygons = upscale_polygons(polygons, downscale_by)
     polygons = [[tuple(point) for point in polygon] for polygon in polygons]
+
+    return polygons

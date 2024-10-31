@@ -6,7 +6,7 @@ from time import sleep
 from random import randint, choice
 from math import ceil
 import platform
-from app.utility import random_unexpected_normal
+from app.utility.utility import random_unexpected_normal
 
 #WORKING DIRECTORY
 CWD = os.path.dirname(os.path.realpath(__file__))
